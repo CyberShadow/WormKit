@@ -1,0 +1,6 @@
+WormNAT home page and documentation: 
+http://maplecenter.net/wormnat/
+
+To install WormNAT, copy over all files from this folder to 
+your W:A folder (two levels up). WormKit should then load
+the WormNAT module.
