@@ -130,7 +130,7 @@ end;
 // ***************************************************************
 
 resourcestring
-  MyIPURL = 'http://maplecenter.net/ip.php';   // any URL that returns only the IP address in plain text (no HTML) will work
+  MyIPURL = 'http://thecybershadow.net/ip.php';   // any URL that returns only the IP address in plain text (no HTML) will work
 
 var
   MyIP: string;

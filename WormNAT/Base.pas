@@ -2,13 +2,7 @@ unit Base;  // base inter-connectivity prototype, and global vars
 
 interface
 uses
-  WinSock, Windows, SysUtils, Classes;
-
-// connections
-var
-  IRC: TSocket = 0;
-  HTTP: TSocket = 0;
-  Game: TSocket = 0;
+  WinSock, Windows, SysUtils, Classes, Packets;
 
 // global options
 var     
@@ -19,6 +13,9 @@ var
   LogLevel: Integer;
   LameHacks: Boolean;
 
+var
+  IRC: PConnection;
+
 // global vars
 var
   Nick, Location: string;
@@ -26,10 +23,6 @@ var
   WormNetServer: string;
   HostPlayer: string;
   NoCapture: Boolean;
-
-// buffers
-var
-  HTTPin, HTTPin2, HTTPout, IRCin, IRCin2, IRCout: string;
 
 type
   TModule = class;
@@ -224,15 +217,16 @@ begin
 
   // echo to IRC non-verbose messages
   if Level=0 then
-    if(IRC or LingeringIRC<>0)and(Nick<>'') then
+    {if(IRC or LingeringIRC<>0)and(Nick<>'') then
       begin
       S2:=':WormNAT!WormNAT@wormnat.xeon.cc NOTICE '+Nick+' :'+S+#13#10;
-      {if send(IRC, S2[1], Length(S2), 0)=SOCKET_ERROR then
-        begin
-        IRC:=0;
-        Log('[LOG] WormNET IRC connection broken when logging.');
-        end;}
       IRCin2:=IRCin2+S2;
+      end;}
+    if IRC<>nil then
+      begin
+      S2:=':WormNAT!WormNAT@wormnat.xeon.cc NOTICE '+Nick+' :'+S+#13#10;
+      IRC.ReadBufferOut:=IRC.ReadBufferOut+S2;
+      IRC.NewReadData:=True;
       end;
 end;
 
