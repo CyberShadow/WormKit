@@ -2,7 +2,7 @@ library wkFileOverride;
 
 {$IMAGEBASE $62800000}
 
-uses Windows, USysUtils, madCodeHook;
+uses Windows, USysUtils, madCHook, MMSystem;
 
 var 
   CreateFileANext : function(lpFileName: PAnsiChar; dwDesiredAccess, dwShareMode: DWORD;
@@ -10,6 +10,7 @@ var
     hTemplateFile: THandle): THandle; stdcall;
   GetPrivateProfileIntANext : function(lpAppName, lpKeyName: PAnsiChar; nDefault: Integer; lpFileName: PAnsiChar): UINT; stdcall;
   GetPrivateProfileStringANext : function(lpAppName, lpKeyName, lpDefault: PAnsiChar; lpReturnedString: PAnsiChar; nSize: DWORD; lpFileName: PAnsiChar): DWORD; stdcall;
+  mmioOpenANext: function(szFileName: PChar; lpmmioinfo: PMMIOInfo; dwOpenFlags: DWORD): HMMIO; stdcall;
 
 // ***************************************************************
 
@@ -86,6 +87,11 @@ begin
     Result := GetPrivateProfileStringANext(lpAppName, lpKeyName, lpDefault, lpReturnedString, nSize, PAnsiChar(AdjustPath(lpFileName)));
 end;
 
+function mmioOpenACallback(szFileName: PChar; lpmmioinfo: PMMIOInfo; dwOpenFlags: DWORD): HMMIO; stdcall;
+begin
+  Result := mmioOpenANext(PAnsiChar(AdjustPath(szFileName)), lpmmioinfo, dwOpenFlags);
+end;
+
 // ***************************************************************
 
 begin
@@ -93,4 +99,5 @@ begin
   HookAPI('kernel32.dll', 'CreateFileA',              @CreateFileACallback,              @CreateFileANext);
   HookAPI('kernel32.dll', 'GetPrivateProfileIntA',    @GetPrivateProfileIntACallback,    @GetPrivateProfileIntANext);
   HookAPI('kernel32.dll', 'GetPrivateProfileStringA', @GetPrivateProfileStringACallback, @GetPrivateProfileStringANext);
+  HookAPI('winmm.dll',    'mmioOpenA',                @mmioOpenACallback,                @mmioOpenANext);
 end.

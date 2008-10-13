@@ -1,6 +1,6 @@
 program WormKit;
 
-uses Windows, USysUtils, madCodeHook;
+uses Windows, USysUtils, madCHook;
 
 var 
   si : TStartupInfo;

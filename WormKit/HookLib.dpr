@@ -22,6 +22,13 @@ begin
     end;
 end;
 
+procedure Dummy;
+begin
+end;
+
+exports
+  Dummy;
+
 begin
   // locate and load WormKit modules
 

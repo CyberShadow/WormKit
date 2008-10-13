@@ -1,5 +1,9 @@
+WARNING! This module is now OBSOLETE.
+This version is no longer supported!
+You should use WormNAT2 instead.
+
 WormNAT home page and documentation: 
-http://maplecenter.net/wormnat/
+http://worms.thecybershadow.net/wormnat/
 
 To install WormNAT, copy over all files from this folder to 
 your W:A folder (two levels up). WormKit should then load

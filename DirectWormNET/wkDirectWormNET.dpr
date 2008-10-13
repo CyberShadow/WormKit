@@ -97,11 +97,22 @@ begin
           Sleep(10);
           mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);  // release left button (again)
           Sleep(10);
+  
+          SetCursorPos(450, 280);  // move the mouse
+          Sleep(10);
+          mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);  // press left button
+          Sleep(10);
+          mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);  // release left button
+          Sleep(10);
+          mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);  // press left button (again)
+          Sleep(10);
+          mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);  // release left button (again)
+          Sleep(10);
           end;
         4:begin
           if not IsWindowEnabled(h) then
             Continue;
-          SetCursorPos(50, 100);  // move the mouse
+          SetCursorPos(50, 80);  // move the mouse
           Sleep(10);
           mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);  // press left button
           Sleep(10);
