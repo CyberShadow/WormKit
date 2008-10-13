@@ -41,7 +41,7 @@ var
 implementation
 
 uses 
-  Windows, USysUtils, UExceptions, WinSock, madCodeHook, Base;
+  Windows, USysUtils, UExceptions, WinSock, madCHook, Base;
 
 // ***************************************************************
 
@@ -405,9 +405,9 @@ begin
         Connections[I].Done:=True;
         end;
 
-    if ntohs(name.sin_port)=17011 then
-      LConnectionType:=ctGame
-    else
+    //if ntohs(name.sin_port)=17011 then
+    //  LConnectionType:=ctGame
+    //else
     if ntohs(name.sin_port)=80 then
       LConnectionType:=ctHTTP
     else
@@ -605,9 +605,9 @@ begin
       Result:=0;
       Exit
       end;
-  if(AsyncMessageWindow<>0)and(AsyncMessageWindow<>HWindow) then   MessageBox(0, 'AsyncMessageWindow changed!', nil, 0);
-  if(AsyncMessage      <>0)and(AsyncMessage      <>wMsg   ) then   MessageBox(0, 'AsyncMessage       changed!', nil, 0);
-  if(AsyncEvents       <>0)and(AsyncEvents       <>lEvent ) then   MessageBox(0, 'AsyncEvents        changed!', nil, 0);
+  //if(AsyncMessageWindow<>0)and(AsyncMessageWindow<>HWindow) then   MessageBox(0, 'AsyncMessageWindow changed!', nil, 0);
+  //if(AsyncMessage      <>0)and(AsyncMessage      <>wMsg   ) then   MessageBox(0, 'AsyncMessage       changed!', nil, 0);
+  //if(AsyncEvents       <>0)and(AsyncEvents       <>lEvent ) then   MessageBox(0, 'AsyncEvents        changed!', nil, 0);
   AsyncMessageWindow:=HWindow;
   AsyncMessage:=wMsg;
   AsyncEvents:=lEvent;
