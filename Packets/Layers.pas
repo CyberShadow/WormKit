@@ -35,10 +35,10 @@ begin
   if Data='' then
     PacketData:=''
   else
-    begin
+  begin
     PacketSize:=Length(Data)+4;
     PacketData:=Chr(X1)+Chr(X2)+WordToStr(PacketSize)+Data;
-    end;
+  end;
 end;
 
 procedure MyPacketProc(Connection: PConnection; var PacketData: string; var X1, X2: Byte; Direction: TDirection);
@@ -49,7 +49,7 @@ var
   //PlayerIndex, PacketIndex, PacketCommandB: Byte;
 begin
   if Connection.Phase=cpLobby then
-    begin
+  begin
     //TLobbySubscriptionProc      = procedure(Connection: PConnection; var PacketData: string; 
     //                                var X1, X2: Byte; var PacketCommand: Word; Direction: TDirection);
     if Length(PacketData)<2 then 
@@ -64,10 +64,10 @@ begin
       PacketData:=''
     else
       PacketData:=WordToStr(PacketCommand)+Data;
-    end
+  end
   {
   else    // Game packet
-    begin
+  begin
     //TGameSubscriptionProc      = procedure(Connection: PConnection; var PacketData: string; 
     //                                var X1, X2, PlayerIndex, PacketIndex: Byte; var X3, X4: Word; 
     //                                var PacketCommand: Byte; Direction: TDirection);
@@ -90,7 +90,7 @@ begin
       PacketData:=''
     else
       PacketData:=Chr(PlayerIndex)+Chr(PacketIndex)+WordToStr(X3)+WordToStr(X4)+Chr(PacketCommandB)+Data;
-    end;
+  end;
   }
 end;
 
@@ -101,18 +101,18 @@ begin
   case PacketCommand of
     lpIntroduction1:
       if Direction=dIncoming then
-        begin
+      begin
         Connection.PlayerName:=Copy(PacketData, 1, Pos(#0, PacketData)-1);
-        end;
+      end;
     lpExistingPlayers:
       if Direction=dIncoming then
-        begin
+      begin
         S:=Copy(PacketData, 7, Length(PacketData));
         Connection.PlayerName:=Copy(S, 1, Pos(#0, S)-1);
-        end;
+      end;
     lpStartGame2:
       Connection.Phase:=cpGame;
-    end;
+  end;
 end;
 
 {
@@ -121,7 +121,7 @@ begin
   case PacketCommand of
     gpGameEnd:
       Connection.Phase:=cpLobby;
-    end;
+  end;
 end;
 }
 

@@ -27,11 +27,11 @@ begin
   P1:=Pos(#13, Source);
   P2:=Pos(#10, Source);
   if (P1=0) and (P2=0) then
-    begin
+  begin
     Dest:='';
     Result:=False;
     Exit
-    end
+  end
   else
     if P1=0 then
       P:=P2

@@ -6,7 +6,7 @@ uses
   ShareMem, Windows, WinSock;
 
 type
-  TConnectionType = (ctHTTP, ctIRC, ctGame);
+  TConnectionType = (ctUnknown, ctHTTP, ctIRC, ctGame, ctOther);
   TDirection = (dIncoming, dOutgoing);
   TConnectionPhase = (cpConnect, cpLobby, cpGame);
 
@@ -41,7 +41,7 @@ type
     ReadBufferIn, ReadBufferOut, WriteBufferIn, WriteBufferOut: string;
     NewReadData: Boolean;
     Done: Boolean;
-    end;
+  end;
 
 // lobby packets
 const

@@ -2,7 +2,7 @@ library wkDebugOutput;
 
 {$IMAGEBASE $62E00000}
 
-uses Windows, USysUtils, madCodeHook;
+uses Windows, USysUtils, madCHook;
 
 var 
   OutputDebugStringANext : procedure(Data: PAnsiChar); stdcall;

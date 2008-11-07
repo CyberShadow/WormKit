@@ -1,0 +1,15 @@
+WormNAT2 hooks up W:A with a reverse proxy. Basically,
+it hosts games on the proxy server, and the proxy routes
+data between the joining players and the host. The proxy
+itself is currently hosted on a dedicated server in Paris,
+France.
+
+Unlike the first version, no configuration is required.
+Just copy the three DLL files to your W:A folder to 
+activate the module.
+
+Of course, we'd much rather that you configure hosting
+the normal way. You can find a detailed guide on how to
+set up hosting here:
+
+http://worms2d.info/Hosting

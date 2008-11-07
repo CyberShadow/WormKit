@@ -1,10 +1,10 @@
-library wkWormNAT;
+library wkWormNAT2;
 
 {$IMAGEBASE $5a800000}
 
 uses 
   ShareMem, 
-  Windows, WinSock, SysUtils, Classes, IniFiles, 
+  Windows, WinSock, SysUtils,
   Packets, PacketsDLL,
   Utils;
 
@@ -44,9 +44,11 @@ begin
   ProxyAddr.sin_port := htons( ProxyPort );
 
   Log('[Proxy] Connecting to '+ProxyAddress+':'+IntToStr(ProxyPort));
+  //DisableHooks;
   if connect( ProxySocket, ProxyAddr, sizeof(ProxyAddr) )=SOCKET_ERROR then
   begin
     Log('[Proxy] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
+    //ReEnableHooks;
     Exit;
   end;
 
@@ -60,8 +62,10 @@ begin
   if connect( GameSocket, GameAddr, sizeof(GameAddr) )=SOCKET_ERROR then
   begin
     Log('[Game] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
+    //ReEnableHooks;
     Exit;
   end;
+  //ReEnableHooks;
 
   TimeVal.tv_sec:=0;
   TimeVal.tv_usec:=5000;
@@ -149,8 +153,8 @@ end;
 // ***************************************************************
 
 var
-  ExternalPort: Word;
-  Stopping: Boolean;
+  ExternalPort: Word = 0;
+  Stopping: Boolean = False;
 
 procedure ControlThreadProc(Foo: Pointer); stdcall;
 var
@@ -179,12 +183,15 @@ begin
   ControlAddr.sin_addr.s_addr := PInAddr(ControlHost.h_addr_list^).s_addr;
   ControlAddr.sin_port := htons( ControlPort );
 
+  //DisableHooks;
   if connect( ControlSocket, ControlAddr, sizeof(ControlAddr) )=SOCKET_ERROR then
   begin
     Log('[Control] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
+    //ReEnableHooks;
     ExternalPort := PortError;
     Exit;
   end;
+  //ReEnableHooks;
 
   if recv( ControlSocket, Input, 2, 0 ) <> 2 then
   begin
@@ -235,6 +242,8 @@ begin
       end;
     end;
   until Stopping;
+  ExternalPort := 0;
+  Stopping := False;
   closesocket(ControlSocket);
 end;
 
@@ -242,7 +251,9 @@ procedure StartControl;
 var 
   ThreadID: Cardinal;
 begin
+  Stopping := True; while (ExternalPort<>0) and (ExternalPort<>PortError) do Sleep(5);
   ExternalPort := 0;
+  Stopping := False;
   Sleep(50);
   CloseHandle(CreateThread(nil, 0, @ControlThreadProc, nil, 0, ThreadID));
   while ExternalPort=0 do Sleep(5);
@@ -261,6 +272,7 @@ var
 
 function ProcessHTTPin(Connection: PConnection; var Data: string): Boolean;
 begin
+  Log('[WWW] < '+Data);
   Result:=True;
 end;
 
@@ -269,10 +281,10 @@ var
   P: Integer;
 begin
   Result:=True;
+  Log('[WWW] > '+Data);
   // process Data
   if Copy(Data, 1, 4)='GET ' then
     try
-      Log('[WWW] '+Data, 1);
       // GET Http://wormnet1.team17.com:80/wormageddonweb/Game.asp?Cmd=Create&Name=ßCyberShadow-MD&HostIP=http://wormnat.xeon.cc/&Nick=CyberShadow-MD&Chan=AnythingGoes&Loc=40&Type=0 HTTP/1.0
       if (Pos('/Game.asp?Cmd=Create&', Data)<>0) and (Pos('HostIP=', Data)<>0) then
       begin
@@ -290,7 +302,7 @@ begin
         
         NewHost := ProxyAddress + ':' + IntToStr(ExternalPort);
         Insert(NewHost, Data, P);
-        Log('Game creation: '+MyRealHost+' substituted with '+NewHost, 2);
+        Log('Game creation: '+MyRealHost+' substituted with '+NewHost);
       end;
       // GET Http://wormnet1.team17.com:80/wormageddonweb/Game.asp?Cmd=Close&GameID=1196270&Name=-CyberShadow-MD&HostID=&GuestID=&GameType=0 HTTP/1.0
       if (Pos('/Game.asp?Cmd=Close&', Data)<>0) and (Pos('HostIP=', Data)<>0) then 
@@ -303,7 +315,7 @@ begin
         StopControl;
       end;
     except
-      on E: Exception do 
+      on E: Exception do
       begin
         Log('[HTTP] Error in processing GET request: '+E.Message);
         Exit;
@@ -314,6 +326,17 @@ end;
 // ***************************************************************
 
 begin
+  if FileExists('wkWormNAT.dll') then
+  begin
+    MessageBox(0, 
+      'Ack! You seem to have the old WormNAT installed.'#13#10+
+      #13#10+
+      'Please delete wkWormNAT.dll. The first version of'#13#10+
+      'WormNAT is obsolete and incompatible with WormNAT2.'#13#10+
+      'WormNAT2 will not work until you do that.', 'Error', MB_ICONERROR);
+    Exit;
+  end;
+
   MessageBox(0, 
     '                     Greetings WormNAT2 user!'#13#10+
     #13#10+
@@ -330,5 +353,13 @@ begin
     '                  http://worms2d.info/Hosting',
     'A friendly reminder', MB_ICONINFORMATION);
   
+  Log('----------------------------------------');
+  if not IsPacketsInitialized then
+  begin
+    MessageBox(0, 
+      'Looks like wkPackets failed to initialize... '#13#10+
+      'WormNAT2 can''t work without it, and will be disabled.', 'Error', MB_ICONERROR);
+    Exit;
+  end;
   SubscribeToHTTP(ProcessHTTPin, ProcessHTTPout);
 end.

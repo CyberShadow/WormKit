@@ -14,8 +14,11 @@ exports
   SubscribeToPackets,
   SubscribeToLobby,
   //SubscribeToGame,
+
   SubscribeToIRC,
   SubscribeToHTTP,
+  SubscribeToOther,
+  
   SubscribeToResolve,
 
   CreatePacket,
@@ -23,7 +26,11 @@ exports
   //CreateGamePacket,
   //CreateGameChatAnonPacket;
 
-  GetConnections;
+  DisableHooks,
+  ReenableHooks,
+  
+  GetConnections,
+  IsPacketsInitialized;
 
 begin
 end.

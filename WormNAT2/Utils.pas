@@ -5,15 +5,12 @@ interface
 uses
   SysUtils;
 
-var
-  LogLevel: Integer;
-
-procedure Log(S: string; Level: Integer = 0);
+procedure Log(S: string);
 procedure AppendTo(FN, S: string);
 
 implementation
 
-procedure Log(S: string; Level: Integer = 0);
+procedure Log(S: string);
 var
   F: text;
 begin
@@ -21,16 +18,13 @@ begin
   if Copy(S, 1, 1)<>'-' then
     S:='['+TimeToStr(Now)+'] '+S;
 
-  if LogLevel>=Level then
-    begin
-    {$I-}
-    Assign(F, ExtractFilePath(ParamStr(0))+'WormNAT2.log');
-    Append(F);
-    WriteLn(F, S);
-    Close(f);
-    {$I+}
-    if IOResult<>0 then ;
-    end;
+  {$I-}
+  Assign(F, ExtractFilePath(ParamStr(0))+'WormNAT2.log');
+  Append(F);
+  WriteLn(F, S);
+  Close(f);
+  {$I+}
+  if IOResult<>0 then ;
 end;
 
 procedure AppendTo(FN, S: string);
