@@ -1,0 +1,15 @@
+If this module is loaded, it automatically tries to click its way
+from the main menu to #AnythingGoes. It's not exactly "dumb" macroing,
+since it waits for the next menu/window to appear before proceeding to 
+click in another zone.
+
+You can temporarily disable this module by holding down Shift while
+Worms is starting up. Or you could press Esc a few times - if the
+module detects that you went back a screen, it'll stop.
+
+Note, that it's not possible to find the position of the "Log in to 
+WormNET" link in the Worms browser (without doing some wicked OCR, at 
+least); so I've assumed that you've installed my WormNET server browser
+page, and didn't modify it. 
+(you can get it at http://wormse.thecybershadow.net/wormnet/ , it won't 
+affect your capability to play on Team17 WormNET in any way ;) )
