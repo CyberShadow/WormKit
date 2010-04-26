@@ -16,10 +16,10 @@ begin
   ChDir(ExtractFilePath(ParamStr(0)));
 
   if(ParamCount=0)and(not FileExists('WA.exe')) then
-    begin
+  begin
     MessageBox(0, 'You need to unpack WormKit to your Worms : Armageddon folder.', 'Error', MB_ICONERROR);
     Exit;
-    end;
+  end;
 
   ZeroMemory(@si, sizeOf(si));
   if ParamCount=0 then

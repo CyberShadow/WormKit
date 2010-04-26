@@ -5,12 +5,8 @@ library HookLib;
 uses Windows;
 
 var
-  F: TWin32FindData;
-  H, M: THandle;
   Modules: array[1..100] of THandle;
-  ModuleNr, ErrNo: Integer;
-  ErrNoStr: string;
-  Msg: PChar;
+  ModuleNr: Integer;
 
 procedure LibraryProc(Reason: Integer);
 var
@@ -43,6 +39,12 @@ end;
 
 exports
   Dummy;
+
+var
+  F: TWin32FindData;
+  H, M: THandle;
+  ErrNo: Integer;
+  ErrNoStr: string;
 
 begin
   // locate and load WormKit modules
