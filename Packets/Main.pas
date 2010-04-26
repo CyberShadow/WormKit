@@ -54,6 +54,7 @@ uses
 var 
   connectNext : function (s: TSocket; name: PSockAddrIn; NameLen: Integer) : Integer;  stdcall;
   acceptNext : function(s: TSocket; addr: PSockAddr; addrlen: PInteger): TSocket; stdcall;
+  WSAAcceptNext: function(s: TSocket; addr: PSockAddr; addrlen: PInteger; lpfnCondition: Pointer; dwCallbackData: DWORD): TSocket; stdcall;
   sendNext : function (s: TSocket; var Buf; len, flags: Integer): Integer; stdcall;
   recvNext : function (s: TSocket; var Buf; len, flags: Integer): Integer; stdcall;
   ioctlsocketNext : function(s: TSocket; cmd: DWORD; var arg: u_long): Integer; stdcall;
@@ -144,6 +145,7 @@ var
     Socket: TSocket;
   end;
   TimeVal: TTimeVal;
+  OldConnectionType: TConnectionType;
 begin
   try
     with Connection^ do
@@ -208,15 +210,32 @@ begin
           Break;
         end;
 
+        OldConnectionType := ConnectionType;
         if ConnectionType=ctUnknown then
           ConnectionType := DetectConnectionType(WriteBufferIn);
 
         // process data to-be-sent
         if ConnectionType=ctGame then
         begin
-          // we already processed sent game data in the send() hook, so just send the buffer
-          WriteBufferOut:=WriteBufferIn;
-          WriteBufferIn:='';
+          if OldConnectionType=ctUnknown then
+          begin
+            if WriteBufferIn<>'' then
+            begin   // we didn't know it was a game connection in the send hook, process it now
+              Inc(HookLevel);
+              Data := WriteBufferIn;
+              WriteBufferIn := '';
+              for I:=0 to High(RawSubscriptions) do
+                RawSubscriptions[I](Connection, Data, dOutgoing);
+              WriteBufferOut := WriteBufferOut + Data;
+              Dec(HookLevel);
+            end
+          end
+          else
+          begin
+            // we already processed sent game data in the send() hook, so just send the buffer
+            WriteBufferOut:=WriteBufferIn;
+            WriteBufferIn:='';
+          end;
         end
         else
         if ConnectionType=ctIRC then
@@ -538,18 +557,18 @@ end;
 
 // ***************************************************************
 
-function acceptCallback(s: TSocket; addr: PSockAddr; addrlen: PInteger): TSocket; stdcall;
+// VP 2009.06.16: for both accept and WSAAccept
+procedure OnAcceptedConnection(AcceptedSocket: TSocket; addr: PSockAddr; addrlen: PInteger);
 var
   MyAddr: TSockAddr;
   MyAddrLen: Integer;
 begin
-  // Worms only accepts game connections (port 17011) AFAiK
-  Result:=acceptNext(s, addr, addrlen);
   if HookLevel>0 then Exit;
+  if (AcceptedSocket=0) or (AcceptedSocket=INVALID_SOCKET) or (AcceptedSocket=SOCKET_ERROR) then Exit;
   if addr=nil then
   begin
     MyAddrLen:=SizeOf(MyAddr);
-    getpeername(Result, MyAddr, MyAddrLen);
+    getpeername(AcceptedSocket, MyAddr, MyAddrLen);
     addr:=@MyAddr;
     addrlen:=@MyAddrLen;
   end;
@@ -559,13 +578,25 @@ begin
   with Connections[High(Connections)]^ do
   begin
     ConnectionType:=ctGame;
-    Socket:=Result;
+    Socket:=AcceptedSocket;
     Direction:=dIncoming;
     Phase:=cpConnect;
     Address:=addr^;
     AddressLen:=addrlen^;
     ThreadHandle:=CreateThread(nil, 0, @ConnectionProc, Connections[High(Connections)], 0, ThreadID);
   end;
+end;
+
+function acceptCallback(s: TSocket; addr: PSockAddr; addrlen: PInteger): TSocket; stdcall;
+begin
+  Result:=acceptNext(s, addr, addrlen);
+  OnAcceptedConnection(Result, addr, addrlen);
+end;
+
+function WSAAcceptCallback(s: TSocket; addr: PSockAddr; addrlen: PInteger; lpfnCondition: Pointer; dwCallbackData: DWORD): TSocket; stdcall;
+begin
+  Result := WSAAcceptNext(s, addr, addrlen, lpfnCondition, dwCallbackData);
+  OnAcceptedConnection(Result, addr, addrlen);
 end;
 
 // ***************************************************************
@@ -587,7 +618,7 @@ begin
       SetLength(Data, len);
       Move(Buf, Data[1], len);
       if (HookLevel=0) and (Connections[I].ConnectionType=ctGame) then
-      begin              // game packets are sent one at a time, we can process them right here 
+      begin              // game packets are sent one at a time, we can process them right here
         Inc(HookLevel);      // without having to split them later
         for J:=0 to High(RawSubscriptions) do
           RawSubscriptions[J](Connections[I], Data, dOutgoing);
@@ -794,6 +825,7 @@ begin
   Initialized :=
     HookAPI('wsock32.dll',   'connect',       @connectCallback,       @connectNext) and
     HookAPI('wsock32.dll',   'accept',        @acceptCallback,        @acceptNext) and
+    HookAPI('ws2_32.dll',    'WSAAccept',     @WSAAcceptCallback,     @WSAAcceptNext) and
     HookAPI('wsock32.dll',   'send',          @sendCallback,          @sendNext) and
     HookAPI('wsock32.dll',   'recv',          @recvCallback,          @recvNext) and
     HookAPI('wsock32.dll',   'ioctlsocket',   @ioctlsocketCallback,   @ioctlsocketNext) and

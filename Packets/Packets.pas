@@ -2,6 +2,7 @@ unit Packets;
 // common type-declaration unit
 
 interface
+
 uses
   ShareMem, Windows, WinSock;
 
