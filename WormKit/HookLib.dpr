@@ -62,22 +62,10 @@ begin
       begin
         ErrNo := GetLastError;
         Str(ErrNo, ErrNoStr);
-        {Msg := AllocMem(4096);
-        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
-                        nil,
-                        ErrNo,
-                        0,
-                        Msg,
-                        4096,
-                        nil);        
- 
-        Str(Length(Msg), ErrNoStr);}
-        
         MessageBox(0, PChar('Warning: can''t load module "'+F.cFileName+'".'#13#10+
           'It''s probably missing some DLL files it depends on.'#13#10#13#10+
           'Error #'+ErrNoStr+':'#13#10+
           SysErrorMessage(ErrNo)), 'WormKit', MB_ICONWARNING);
-        //FreeMem(Msg);
       end
       else
       begin
