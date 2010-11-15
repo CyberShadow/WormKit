@@ -1,0 +1,19 @@
+=== 30s ===
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]31492[/attach]
+
+Run the game via WormKit, reproduce the freeze and leave the game running. 30 seconds since you started the game, W:A should close. Find and post the file [b]FREEZE.DMP[/b] from your W:A folder.
+
+=== 5 ===
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]30787[/attach]
+
+Run the game via WormKit, reproduce the freeze and leave the game running. 5 minutes since you started the game, W:A should close. Find and post the file [b]FREEZE.DMP[/b] from your W:A folder.
+
+=== 45 ===
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]31185[/attach]
+
+Run the game via WormKit, reproduce the freeze and leave the game running. 45 minutes since you started the game, W:A should close. Find and post the file [b]FREEZE.DMP[/b] from your W:A folder.
+
+=== ^Break ===
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]32227[/attach]
+
+Run the game via WormKit, reproduce the freeze and press Ctrl+Break. W:A should close, and a file named FREEZE.DMP should be created in your W:A folder. Find and post this file here.

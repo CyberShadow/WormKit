@@ -1,0 +1,11 @@
+=== ERRORLOG.TXT ===
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]30805[/attach]
+Run the game via WormKit.exe and reproduce the crash. You should get an error message mentioning [b]ERRORLOG.TXT[/b] - find this file in your W:A folder, and post it here as an attachment.
+
+=== CRASH.DMP ===
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]30805[/attach]
+Run the game via WormKit.exe and reproduce the crash. You should get an error message mentioning ERRORLOG.TXT. Find the file [b]CRASH.DMP[/b] in your W:A folder, and post it here as an attachment.
+
+=== Both ===
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]30805[/attach]
+Run the game via WormKit.exe and reproduce the crash. You should get an error message mentioning ERRORLOG.TXT. Find this file and the file [b]CRASH.DMP[/b] in your W:A folder, and post them here as attachments.

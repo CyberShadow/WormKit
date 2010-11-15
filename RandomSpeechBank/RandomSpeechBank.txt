@@ -1,0 +1,15 @@
+This module creates a "Virtual" speech bank 
+Each time Worms tries to open a file from the CD, this module tries to 
+check to see if you have the same file in your DATA folder.
+So, if Worms tries to open, for example, "D:\Data\Water\Blue\Water.dir", 
+wkFileOverride will see if you have a 
+"C:\Worms Armageddon\DATA\Water\Blue\Water.dir", and if you do, it 
+"substitutes" the CD-ROM file with that 
+(above example is assuming D: is your CD-ROM drive and you installed 
+Worms to "C:\Worms Armageddon\").
+Note that this plug-in will NOT let you play without a CD-ROM - 
+either in your CD drive or mounted as an ISO :)
+
+Version history:
+  06 April     2006 - v1.0 - first version
+  05 September 2006 - v1.1 - fixed INI file overriding, which is used for mission (.wam) files

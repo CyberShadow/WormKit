@@ -1,0 +1,1 @@
+Please install the attached WormKit module, run the game and reproduce the lock-ups. After you exit the game, compress and post here the files freeze.log and freezelog.dmp from your W:A folder.

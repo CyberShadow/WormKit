@@ -1,0 +1,2 @@
+Please install [URL="http://worms.thecybershadow.net/wormkit/"]WormKit[/URL] and the following WormKit module: [attach]30849[/attach]
+Run the game via WormKit.exe and ?????????????. After the game has closed, there should be some files named [b]EXC_xxxx.DMP[/b] in your W:A folder. Please compress and post them here.
