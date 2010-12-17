@@ -821,6 +821,23 @@ begin
   Result := Initialized;
 end;
 
+procedure SetAffinity; // hack
+var
+  H: THandle;
+  Mask, SMask: DWORD;
+  I: Integer;
+begin
+  H := GetCurrentProcess();
+  if GetProcessAffinityMask(H, Mask, SMask) then
+    for I := 0 to 31 do
+      if (Mask and (1 shl I))<>0 then
+      begin
+        Mask := 1 shl I;
+        SetProcessAffinityMask(H, Mask);
+        Break;
+      end;
+end;
+
 begin
   Initialized :=
     HookAPI('wsock32.dll',   'connect',       @connectCallback,       @connectNext) and
@@ -848,4 +865,6 @@ begin
       'and if nothing works, post on the Team17 forums or contact CyberShadow.', 'Error', MB_ICONERROR);
     Exit;
   end;
+
+  SetAffinity;
 end.
