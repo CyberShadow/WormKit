@@ -1,61 +1,63 @@
-{$APPTYPE CONSOLE}
-
 library wkForceFrontendResolution;
 
 uses
   Windows, madCHook;
 
-var
-  Next: Pointer;
-
-procedure Callback; assembler;
-asm
-  mov     ecx, 1024
-  mov     edx, 768
-  
-  push    ebp
-  mov     ebp, esp
-  sub     esp, 494h
-  mov     eax, $44F189
-  jmp     eax
+function GetInterfaceMethod(const intf; methodOffset: dword) : pointer;
+begin
+  result := pointer(pointer(dword(pointer(intf)^) + methodOffset)^);
 end;
 
-procedure Patch(Addr: Cardinal; Value: Byte);
+// ***************************************************************************
+
+const
+  IID_IDirectDraw2: TGUID = '{B3A6F3E0-2B43-11CF-A2DE-00AA00B93356}';
+
+type
+  IDirectDraw = ^TDirectDraw;
+  PDirectDrawVMT = ^TDirectDrawVMT;
+  TDirectDraw = record VMT: PDirectDrawVMT; end;
+  TDirectDrawVMT = record
+    QueryInterface: function (self: IDirectDraw; const IID: TGUID; out Obj): HResult; stdcall;
+  end;
+  IDirectDraw2 = Pointer;
+
+const
+  DD_OK    = HResult(0);
+  DD_FALSE = HResult(S_FALSE);
+
 var
-  OldProtect: Cardinal;
+  DirectDrawCreateNext : function (lpGUID: PGUID; out lplpDD: IDirectDraw; pUnkOuter: Pointer): HResult; stdcall = nil;
+  SetDisplayModeNext: function (self: IDirectDraw; dwWidth, dwHeight, dwBpp, dwRefreshRate, dwFlags: DWORD): HResult; stdcall = nil;
+
+function SetDisplayModeCallback(self: IDirectDraw; dwWidth, dwHeight, dwBpp, dwRefreshRate, dwFlags: DWORD): HResult; stdcall;
 begin
-  VirtualProtect(Pointer(Addr), 1, PAGE_EXECUTE_READWRITE, OldProtect);
-  PByte(Addr)^ := Value;
+  Result := SetDisplayModeNext(self, 800, 600, dwBpp, dwRefreshRate, dwFlags);
 end;
 
-// ***************************************************************
-
+function DirectDrawCreateCallback(lpGUID: PGUID; out lplpDD: IDirectDraw; pUnkOuter: Pointer): HResult; stdcall;
 var
-  ShowWindowNext: function(hWnd: HWND; nCmdShow: Integer): BOOL; stdcall;
-
-// ***************************************************************
-
-function ShowWindowCallback(hWnd: HWND; nCmdShow: Integer): BOOL; stdcall;
+  DD2: IDirectDraw2;
 begin
-  if nCmdShow=SW_HIDE then
-  begin
-    SetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW or SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOOWNERZORDER or SWP_NOSENDCHANGING or SWP_NOSIZE or SWP_NOZORDER);
-    Result := true; // hack
-  end
-  else
-    Result := ShowWindowNext(hWnd, nCmdShow);
+  try
+    if @DirectDrawCreateNext=nil then
+      Result := DD_FALSE
+    else
+      Result := DirectDrawCreateNext(lpGUID, lplpDD, pUnkOuter);
+    if Result=DD_OK then
+    begin
+      if @SetDisplayModeNext=nil then
+        if lplpDD<>nil then
+        begin
+          lplpDD.VMT.QueryInterface(lplpDD, IID_IDirectDraw2, DD2);
+          HookCode(GetInterfaceMethod(DD2, $54), @SetDisplayModeCallback, @SetDisplayModeNext);
+        end;
+    end;
+  except
+    Result := DD_FALSE;
+  end;
 end;
 
-// ***************************************************************
-
-
 begin
-  HookCode(Pointer($44F180), @Callback, Next);
-  HookAPI('user32.dll', 'ShowWindow', @ShowWindowCallback, @ShowWindowNext);
-  
-  Patch($44F1A8, $90);
-  Patch($44F1A9, $90);
-  Patch($44F1AA, $90);
-  Patch($44F1AB, $90);
-  Patch($44F1AC, $90);
+  HookAPI('ddraw.dll', 'DirectDrawCreate', @DirectDrawCreateCallback, @DirectDrawCreateNext);
 end.
