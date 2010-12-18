@@ -32,7 +32,12 @@ var
 
 function SetDisplayModeCallback(self: IDirectDraw; dwWidth, dwHeight, dwBpp, dwRefreshRate, dwFlags: DWORD): HResult; stdcall;
 begin
-  Result := SetDisplayModeNext(self, 800, 600, dwBpp, dwRefreshRate, dwFlags);
+  if (dwWidth=640) and (dwHeight=480) and (dwBpp=8) and (dwRefreshRate=0) and (dwFlags=0) then
+  begin
+    dwWidth  := 800;
+    dwHeight := 600;
+  end;
+  Result := SetDisplayModeNext(self, dwWidth, dwHeight, dwBpp, dwRefreshRate, dwFlags);
 end;
 
 function DirectDrawCreateCallback(lpGUID: PGUID; out lplpDD: IDirectDraw; pUnkOuter: Pointer): HResult; stdcall;
