@@ -337,6 +337,7 @@ begin
     Exit;
   end;
 
+{$IFNDEF NOPOPUP}
   MessageBox(0, 
     '                     Greetings WormNAT2 user!'#13#10+
     #13#10+
@@ -352,6 +353,7 @@ begin
     #13#10+
     '                  http://worms2d.info/Hosting',
     'A friendly reminder', MB_ICONINFORMATION);
+{$ENDIF}
   
   Log('----------------------------------------');
   if not IsPacketsInitialized then
