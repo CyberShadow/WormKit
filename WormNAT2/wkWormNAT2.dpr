@@ -369,7 +369,7 @@ begin
     MessageBox(0, 
       'Ack! You seem to have the old WormNAT installed.'#13#10+
       #13#10+
-      'Please delete wkWormNAT.dll. The first version of'#13#10+
+      'Please delete wkWormNAT.dll. The first version of '+
       'WormNAT is obsolete and incompatible with WormNAT2.'#13#10+
       'WormNAT2 will not work until you do that.', 'Error', MB_ICONERROR);
     ExitProcess(1);
@@ -380,8 +380,8 @@ begin
     MessageBox(0, 
       'Ack! You seem to have wkPackets installed.'#13#10+
       #13#10+
-      'Please delete wkPackets.dll. Unfortunately, it is known'#13#10+
-      'to cause "skipped packet" errors. WormNAT2 no longer requires.'#13#10+
+      'Please delete wkPackets.dll. Unfortunately, it is known '+
+      'to cause "skipped packet" errors. WormNAT2 no longer requires '+
       'wkPackets to run.', 'Error', MB_ICONERROR);
     ExitProcess(1);
   end;
@@ -390,14 +390,14 @@ begin
   MessageBox(0, 
     '                     Greetings WormNAT2 user!'#13#10+
     #13#10+
-    'This is a reminder message to remind you that WormNAT2        '#13#10+
-    'is a free service. Using WormNAT2 tunnels all data'#13#10+
-    'through a proxy server hosted by the community, thus'#13#10+
-    'consuming bandwidth and other resources. Therefore,'#13#10+
-    'we''d like to ask you to only use WormNAT2 when you'#13#10+
+    'This is a reminder message to remind you that WormNAT2 '+
+    'is a free service. Using WormNAT2 tunnels all data '+
+    'through a proxy server hosted by the community, thus '+
+    'consuming bandwidth and other resources. Therefore, '+
+    'we''d like to ask you to only use WormNAT2 when you '+
     'have already tried configuring hosting the proper way.'#13#10+
     #13#10+
-    'Don''t forget that you can find instructions on how'#13#10+
+    'Don''t forget that you can find instructions on how '+
     'to set up hosting here:'#13#10+
     #13#10+
     '                  http://worms2d.info/Hosting',
