@@ -372,7 +372,7 @@ begin
       'Please delete wkWormNAT.dll. The first version of'#13#10+
       'WormNAT is obsolete and incompatible with WormNAT2.'#13#10+
       'WormNAT2 will not work until you do that.', 'Error', MB_ICONERROR);
-    Exit;
+    ExitProcess(1);
   end;
 
   if FileExists('wkPackets.dll') then
@@ -383,7 +383,7 @@ begin
       'Please delete wkPackets.dll. Unfortunately, it is known'#13#10+
       'to cause "skipped packet" errors. WormNAT2 no longer requires.'#13#10+
       'wkPackets to run.', 'Error', MB_ICONERROR);
-    Exit;
+    ExitProcess(1);
   end;
 
 {$IFNDEF NOPOPUP}
