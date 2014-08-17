@@ -5,8 +5,8 @@ library wkWormNAT2;
 uses 
   ShareMem, 
   Windows, WinSock, SysUtils,
-  Packets, PacketsDLL,
-  Utils;
+  Utils,
+  madCHook;
 
 const
   ProxyAddress = 'proxy.worms2d.info';
@@ -90,7 +90,7 @@ begin
       
       if Bytes=0 then
       begin
-        Log('[Control] Connection terminated (Error '+IntToStr(WSAGetLastError)+').');
+        Log('[Proxy] Connection terminated (Error '+IntToStr(WSAGetLastError)+').');
         break;
       end;
       
@@ -127,7 +127,7 @@ begin
       
       if Bytes=0 then
       begin
-        Log('[Control] Connection terminated (Error '+IntToStr(WSAGetLastError)+').');
+        Log('[Game] Connection terminated (Error '+IntToStr(WSAGetLastError)+').');
         break;
       end;
       
@@ -266,17 +266,32 @@ end;
 
 // ***************************************************************
 
+var
+  connectNext : function (s: TSocket; name: PSockAddrIn; NameLen: Integer) : Integer;  stdcall;
+  closesocketNext : function(s: TSocket): Integer; stdcall;
+  sendNext : function (s: TSocket; var Buf; len, flags: Integer): Integer; stdcall;
+
 // connection parameters
 var
+  CurrentHTTPConnection: TSocket;
+  HttpRequest: String;
   MyRealHost, NewHost: String;
 
-function ProcessHTTPin(Connection: PConnection; var Data: string): Boolean;
+function connectCallback(s: TSocket; name: PSockAddrIn; NameLen: Integer) : Integer; stdcall;
 begin
-  Log('[WWW] < '+Data);
-  Result:=True;
+  Result := connectNext(s, name, NameLen);
+  if ntohs(name.sin_port)=80 then
+    CurrentHTTPConnection := s;
 end;
 
-function ProcessHTTPout(Connection: PConnection; var Data: string): Boolean;
+function closesocketCallback(s: TSocket): Integer; stdcall;
+begin
+  Result := closesocketNext(s);
+  if s = CurrentHTTPConnection then
+    CurrentHTTPConnection := 0;
+end;
+
+function ProcessHTTPRequest(var Data: string): Boolean;
 var 
   P: Integer;
 begin
@@ -291,15 +306,15 @@ begin
         P:=Pos('HostIP=', Data) + 7;
         MyRealHost:=Data; Delete(MyRealHost, 1, P-1); MyRealHost:=Copy(MyRealHost, 1, Pos('&', MyRealHost)-1);
         Delete(Data, P, Length(MyRealHost));
-        
+
         GamePort := 17011;
         if Pos(':', MyRealHost)<>0 then
           GamePort := StrToIntDef(Copy(MyRealHost, Pos(':', MyRealHost)+1, 100), 17011);
-        
+
         StartControl;
         if ExternalPort=PortError then
           Exit;
-        
+
         NewHost := ProxyAddress + ':' + IntToStr(ExternalPort);
         Insert(NewHost, Data, P);
         Log('Game creation: '+MyRealHost+' substituted with '+NewHost);
@@ -323,6 +338,29 @@ begin
     end;
 end;
 
+function sendCallback(s: TSocket; var Buf; len, flags: Integer): Integer; stdcall;
+var
+  Data: string;
+begin
+  if s = CurrentHTTPConnection then
+  begin
+    SetLength(Data, len);
+    Move(Buf, Data[1], len);
+    HttpRequest := HttpRequest + Data;
+    if Pos(#13#10#13#10, HttpRequest) > 0 then
+    begin
+      ProcessHTTPRequest(HttpRequest);
+      Result := sendNext(s, HttpRequest[1], Length(HttpRequest), flags);
+      if Result<>Length(HttpRequest) then
+        Log('Bad send result!');
+      HttpRequest := '';
+    end;
+    Result := len;
+  end
+  else
+    Result := sendNext(s, Buf, len, flags);
+end;
+
 // ***************************************************************
 
 begin
@@ -334,6 +372,17 @@ begin
       'Please delete wkWormNAT.dll. The first version of'#13#10+
       'WormNAT is obsolete and incompatible with WormNAT2.'#13#10+
       'WormNAT2 will not work until you do that.', 'Error', MB_ICONERROR);
+    Exit;
+  end;
+
+  if FileExists('wkPackets.dll') then
+  begin
+    MessageBox(0, 
+      'Ack! You seem to have wkPackets installed.'#13#10+
+      #13#10+
+      'Please delete wkPackets.dll. Unfortunately, it is known'#13#10+
+      'to cause "skipped packet" errors. WormNAT2 no longer requires.'#13#10+
+      'wkPackets to run.', 'Error', MB_ICONERROR);
     Exit;
   end;
 
@@ -356,12 +405,7 @@ begin
 {$ENDIF}
   
   Log('----------------------------------------');
-  if not IsPacketsInitialized then
-  begin
-    MessageBox(0, 
-      'Looks like wkPackets failed to initialize... '#13#10+
-      'WormNAT2 can''t work without it, and will be disabled.', 'Error', MB_ICONERROR);
-    Exit;
-  end;
-  SubscribeToHTTP(ProcessHTTPin, ProcessHTTPout);
+  HookAPI('wsock32.dll', 'connect', @connectCallback, @connectNext);
+  HookAPI('wsock32.dll', 'closesocket', @closesocketCallback, @closesocketNext);
+  HookAPI('wsock32.dll', 'send', @sendCallback, @sendNext);
 end.
