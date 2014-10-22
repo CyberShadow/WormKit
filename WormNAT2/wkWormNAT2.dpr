@@ -3,7 +3,6 @@ library wkWormNAT2;
 {$IMAGEBASE $5a800000}
 
 uses 
-  ShareMem, 
   Windows, WinSock, SysUtils,
   Utils,
   madCHook;
