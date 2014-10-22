@@ -1,3 +1,6 @@
 [submodule "LiteUnits"]
 	path = LiteUnits
 	url = https://github.com/CyberShadow/LiteUnits.git
+[submodule "MyStrUtils"]
+	path = MyStrUtils
+	url = https://github.com/CyberShadow/MyStrUtils.git

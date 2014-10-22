@@ -3,8 +3,9 @@ library wkWormNAT2;
 {$IMAGEBASE $5a800000}
 
 uses 
-  Windows, WinSock,
+  Windows, WinSock, Types,
   USysUtils in '..\LiteUnits\USysUtils.pas',
+  MyStrUtils in '..\MyStrUtils\MyStrUtils.pas',
   Utils,
   madCHook;
 
@@ -153,12 +154,13 @@ end;
 // ***************************************************************
 
 var
+  ExternalSocket: Boolean = False;
   ExternalPort: Word = 0;
   Stopping: Boolean = False;
+  ControlSocket: TSocket;
 
 procedure ControlThreadProc(Foo: Pointer); stdcall;
 var
-  ControlSocket: TSocket;
   ControlAddr: TSockAddrIn;
   ControlHost: PHostEnt;
   Input: Word;
@@ -170,38 +172,43 @@ var
     end;
   TimeVal: TTimeVal;
 begin
-  ControlSocket := socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
-
-  ControlAddr.sin_family := AF_INET;
-  ControlHost := gethostbyname(PChar(ProxyAddress));
-  if ControlHost=nil then
+  if ExternalSocket then
+    Log('Control socket is external, skipping handshake.')
+  else
   begin
-    Log('[Control] Failed to resolve '+ProxyAddress+' (Error '+IntToStr(WSAGetLastError)+').');
-    ExternalPort := PortError;
-    Exit;
-  end;
-  ControlAddr.sin_addr.s_addr := PInAddr(ControlHost.h_addr_list^).s_addr;
-  ControlAddr.sin_port := htons( ControlPort );
+    ControlSocket := socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
-  //DisableHooks;
-  if connect( ControlSocket, ControlAddr, sizeof(ControlAddr) )=SOCKET_ERROR then
-  begin
-    Log('[Control] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
+    ControlAddr.sin_family := AF_INET;
+    ControlHost := gethostbyname(PChar(ProxyAddress));
+    if ControlHost=nil then
+    begin
+      Log('[Control] Failed to resolve '+ProxyAddress+' (Error '+IntToStr(WSAGetLastError)+').');
+      ExternalPort := PortError;
+      Exit;
+    end;
+    ControlAddr.sin_addr.s_addr := PInAddr(ControlHost.h_addr_list^).s_addr;
+    ControlAddr.sin_port := htons( ControlPort );
+
+    //DisableHooks;
+    if connect( ControlSocket, ControlAddr, sizeof(ControlAddr) )=SOCKET_ERROR then
+    begin
+      Log('[Control] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
+      //ReEnableHooks;
+      ExternalPort := PortError;
+      Exit;
+    end;
     //ReEnableHooks;
-    ExternalPort := PortError;
-    Exit;
-  end;
-  //ReEnableHooks;
 
-  if recv( ControlSocket, Input, 2, 0 ) <> 2 then
-  begin
-    Log('[Control] Failed to read initial port (Error '+IntToStr(WSAGetLastError)+').');
-    ExternalPort := PortError;
-    closesocket(ControlSocket);
-    Exit;
+    if recv( ControlSocket, Input, 2, 0 ) <> 2 then
+    begin
+      Log('[Control] Failed to read initial port (Error '+IntToStr(WSAGetLastError)+').');
+      ExternalPort := PortError;
+      closesocket(ControlSocket);
+      Exit;
+    end;
+    ExternalPort := Input;
+    Log('[Control] Hosting port: '+IntToStr(Input));
   end;
-  ExternalPort := Input;
-  Log('[Control] Hosting port: '+IntToStr(Input));
 
   TimeVal.tv_sec:=0;
   TimeVal.tv_usec:=5000;
@@ -357,6 +364,49 @@ end;
 
 // ***************************************************************
 
+procedure CheckCommandLine;
+var
+  I: Integer;
+  Arr: TStringDynArray;
+  wsaData: TWSAData;
+  ProcessHandle, Event: THandle;
+begin
+  for I:=1 to ParamCount-1 do
+    if ParamStr(I)='/wnat2' then
+    begin
+      Arr := Split(ParamStr(I+1), '-');
+      if Length(Arr)<>3 then
+        continue;
+
+      ExternalSocket := true;
+
+      if WSAStartup(MAKEWORD(2, 2), wsaData)=0 then
+      begin
+        ProcessHandle := OpenProcess(PROCESS_ALL_ACCESS, FALSE, StrToInt(Arr[0]));
+        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
+        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[2])), GetCurrentProcess(), @Event        , 0, FALSE, DUPLICATE_SAME_ACCESS);
+        CloseHandle(ProcessHandle);
+        Log('New socket: ' + IntToStr(ControlSocket));
+
+        if Event<>0 then
+        begin
+          if  not SetEvent(Event) then
+            Log('SetEvent failed.');
+          CloseHandle(Event);
+        end;
+
+        if ControlSocket<>0 then
+          StartControl
+        else
+          Log('Socket dupe failed.');
+      end
+      else
+        Log('WSAStartup failed.');
+    end;
+end;
+
+// ***************************************************************
+
 begin
   if FileExists('wkWormNAT.dll') then
   begin
@@ -397,9 +447,11 @@ begin
     '                  http://worms2d.info/Hosting',
     'A friendly reminder', MB_ICONINFORMATION);
 {$ENDIF}
-  
+
   Log('----------------------------------------');
   HookAPI('wsock32.dll', 'connect', @connectCallback, @connectNext);
   HookAPI('wsock32.dll', 'closesocket', @closesocketCallback, @closesocketNext);
   HookAPI('wsock32.dll', 'send', @sendCallback, @sendNext);
+
+  CheckCommandLine;
 end.
