@@ -1,4 +1,4 @@
 === ^Break ===
-Please enable the option to load WormKit modules, and install the following WormKit module: [url=http://dump.thecybershadow.net/8405f07d0cfca4498c9d9bcc6075b860/wkMinidumpOnCtrlBreak.dll]wkMinidumpOnCtrlBreak.dll[/url]
+Please enable the option to load WormKit modules on the Advanced Options screen, and install the following WormKit module: [url=http://dump.thecybershadow.net/8405f07d0cfca4498c9d9bcc6075b860/wkMinidumpOnCtrlBreak.dll]wkMinidumpOnCtrlBreak.dll[/url]
 
 Run the game, reproduce the freeze and press Ctrl+Break. W:A should close, and a file named FREEZE.DMP should be created in your W:A folder. Find and post this file here, or email it to devs at worms2d.info.
