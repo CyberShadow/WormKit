@@ -2,13 +2,13 @@ unit Utils;
 
 interface
 
-uses
-  SysUtils;
-
 procedure Log(S: string);
 procedure AppendTo(FN, S: string);
 
 implementation
+
+uses
+  USysUtils;
 
 procedure Log(S: string);
 var
@@ -16,7 +16,7 @@ var
 begin
   // logging to disk will work only if the file WormNAT.log exists
   if Copy(S, 1, 1)<>'-' then
-    S:='['+TimeToStr(Now)+'] '+S;
+    S:='['+TimeStr+'] '+S;
 
   {$I-}
   Assign(F, ExtractFilePath(ParamStr(0))+'WormNAT2.log');

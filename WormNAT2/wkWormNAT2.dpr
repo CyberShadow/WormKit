@@ -3,7 +3,8 @@ library wkWormNAT2;
 {$IMAGEBASE $5a800000}
 
 uses 
-  Windows, WinSock, SysUtils,
+  Windows, WinSock,
+  USysUtils in '..\LiteUnits\USysUtils.pas',
   Utils,
   madCHook;
 
@@ -298,7 +299,7 @@ begin
   Log('[WWW] > '+Data);
   // process Data
   if Copy(Data, 1, 4)='GET ' then
-    try
+    begin
       // GET Http://wormnet1.team17.com:80/wormageddonweb/Game.asp?Cmd=Create&Name=ßCyberShadow-MD&HostIP=http://wormnat.xeon.cc/&Nick=CyberShadow-MD&Chan=AnythingGoes&Loc=40&Type=0 HTTP/1.0
       if (Pos('/Game.asp?Cmd=Create&', Data)<>0) and (Pos('HostIP=', Data)<>0) then
       begin
@@ -327,12 +328,6 @@ begin
         Insert(NewHost, Data, P);
         Log('Game close: '+MyRealHost+' substituted with '+NewHost);
         StopControl;
-      end;
-    except
-      on E: Exception do
-      begin
-        Log('[HTTP] Error in processing GET request: '+E.Message);
-        Exit;
       end;
     end;
 end;

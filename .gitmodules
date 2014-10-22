@@ -1,0 +1,3 @@
+[submodule "LiteUnits"]
+	path = LiteUnits
+	url = https://github.com/CyberShadow/LiteUnits.git
