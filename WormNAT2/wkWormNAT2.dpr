@@ -419,6 +419,7 @@ begin
     ExitProcess(1);
   end;
 
+{$IFNDEF ALLOW_WKPACKETS}
   if FileExists('wkPackets.dll') then
   begin
     MessageBox(0, 
@@ -429,6 +430,7 @@ begin
       'wkPackets to run.', 'Error', MB_ICONERROR);
     ExitProcess(1);
   end;
+{$ENDIF}
 
 {$IFNDEF NOPOPUP}
   MessageBox(0, 
@@ -448,10 +450,25 @@ begin
     'A friendly reminder', MB_ICONINFORMATION);
 {$ENDIF}
 
+  if not (
+    HookAPI('wsock32.dll', 'connect', @connectCallback, @connectNext) and
+    HookAPI('wsock32.dll', 'closesocket', @closesocketCallback, @closesocketNext) and
+    HookAPI('wsock32.dll', 'send', @sendCallback, @sendNext)) then
+  begin
+    MessageBox(0,
+      'Ack, wkWormNAT2 initialization error!'#13#10+
+      #13#10+
+      'wkWormNAT2 failed to install the network API hooks it needs in order to work.'#13#10+
+      'This could be caused by several reasons...'#13#10+
+      'If you''re running an anti-virus program, it might be blocking wkWormNAT2.'#13#10+
+      'It''s possible that you need to be a system administrator to run wkWormNAT2.'#13#10+
+      'Maybe there''s some other software incompatibility with wkWormNAT2...'#13#10+
+      'The exact cause can''t be determined.'#13#10+
+      'Anyway, try rebooting and disabling your security programs.', 'Error', MB_ICONERROR);
+    ExitProcess(1);
+  end;
+
   Log('----------------------------------------');
-  HookAPI('wsock32.dll', 'connect', @connectCallback, @connectNext);
-  HookAPI('wsock32.dll', 'closesocket', @closesocketCallback, @closesocketNext);
-  HookAPI('wsock32.dll', 'send', @sendCallback, @sendNext);
 
   CheckCommandLine;
 end.
