@@ -375,6 +375,7 @@ var
   wsaData: TWSAData;
   ProcessHandle, Event: THandle;
 begin
+  Arr:=nil;
   for I:=1 to ParamCount-1 do
     if ParamStr(I)='/wnat2' then
     begin
