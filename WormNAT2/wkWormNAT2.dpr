@@ -385,7 +385,7 @@ begin
       ExternalSocket := true;
       GamePort := GetProfileInt('NetSettings', 'HostingPort', 17011);
 
-      if WSAStartup(MAKEWORD(2, 2), wsaData)=0 then
+      if WSAStartup(MAKEWORD(1, 1), wsaData)=0 then
       begin
         ProcessHandle := OpenProcess(PROCESS_ALL_ACCESS, FALSE, StrToInt(Arr[0]));
         DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
