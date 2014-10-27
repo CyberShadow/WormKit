@@ -383,6 +383,7 @@ begin
         continue;
 
       ExternalSocket := true;
+      GamePort := GetProfileInt('NetSettings', 'HostingPort', 17011);
 
       if WSAStartup(MAKEWORD(2, 2), wsaData)=0 then
       begin
