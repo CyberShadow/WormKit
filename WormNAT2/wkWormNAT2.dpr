@@ -13,6 +13,7 @@ const
   ProxyAddress = 'proxy.worms2d.info';
   ControlPort = 17018;
   PortError = $FFFF;
+  PortUnknown = 1; // WormNAT2Ex mode
 
 var
   GamePort: Word;
@@ -173,7 +174,10 @@ var
   TimeVal: TTimeVal;
 begin
   if ExternalSocket then
-    Log('Control socket is external, skipping handshake.')
+  begin
+    Log('Control socket is external, skipping handshake.');
+    ExternalPort := PortUnknown;
+  end
   else
   begin
     ControlSocket := socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
