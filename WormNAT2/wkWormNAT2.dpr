@@ -258,8 +258,8 @@ begin
   closesocket(ControlSocket);
 end;
 
-procedure StartControl;
-var 
+procedure StartControl(ControlWait: boolean = false);
+var
   ThreadID: Cardinal;
 begin
   Stopping := True; while (ExternalPort<>0) and (ExternalPort<>PortError) do Sleep(5);
@@ -267,7 +267,7 @@ begin
   Stopping := False;
   Sleep(50);
   CloseHandle(CreateThread(nil, 0, @ControlThreadProc, nil, 0, ThreadID));
-  while ExternalPort=0 do Sleep(5);
+  if ControlWait then while ExternalPort=0 do Sleep(5);
 end;
 
 procedure StopControl;
@@ -322,7 +322,7 @@ begin
         if Pos(':', MyRealHost)<>0 then
           GamePort := StrToIntDef(Copy(MyRealHost, Pos(':', MyRealHost)+1, 100), 17011);
 
-        StartControl;
+        StartControl(true);
         if ExternalPort=PortError then
           Exit;
 
@@ -400,7 +400,9 @@ begin
         end;
 
         if ControlSocket<>0 then
-          StartControl
+          StartControl(false)
+          //No wait because this code part doesn't need it
+          //and the DLL is not yet ready to start threads
         else
           Log('Socket dupe failed.');
       end
