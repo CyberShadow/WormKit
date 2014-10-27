@@ -387,25 +387,30 @@ begin
 
       if WSAStartup(MAKEWORD(1, 1), wsaData)=0 then
       begin
-        ProcessHandle := OpenProcess(PROCESS_ALL_ACCESS, FALSE, StrToInt(Arr[0]));
-        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
-        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[2])), GetCurrentProcess(), @Event        , 0, FALSE, DUPLICATE_SAME_ACCESS);
-        CloseHandle(ProcessHandle);
-        Log('New socket: ' + IntToStr(ControlSocket));
-
-        if Event<>0 then
+        ProcessHandle := OpenProcess(PROCESS_DUP_HANDLE, FALSE, StrToInt(Arr[0]));
+        if ProcessHandle<>0 then
         begin
-          if  not SetEvent(Event) then
-            Log('SetEvent failed.');
-          CloseHandle(Event);
-        end;
+          DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
+          DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[2])), GetCurrentProcess(), @Event        , 0, FALSE, DUPLICATE_SAME_ACCESS);
+          CloseHandle(ProcessHandle);
+          Log('New socket: ' + IntToStr(ControlSocket));
 
-        if ControlSocket<>0 then
-          StartControl(false)
-          //No wait because this code part doesn't need it
-          //and the DLL is not yet ready to start threads
+          if Event<>0 then
+          begin
+            if  not SetEvent(Event) then
+              Log('SetEvent failed: ' + IntToHex(GetLastError, 8));
+            CloseHandle(Event);
+          end;
+
+          if ControlSocket<>0 then
+            StartControl(false)
+            //No wait because this code part doesn't need it
+            //and the DLL is not yet ready to start threads
+         else
+            Log('Socket dupe failed: ' + IntToHex(GetLastError, 8));
+        end
         else
-          Log('Socket dupe failed.');
+          Log('OpenProcess failed: ' + IntToHex(GetLastError, 8));
       end
       else
         Log('WSAStartup failed.');
