@@ -409,6 +409,7 @@ begin
       end
       else
         Log('WSAStartup failed.');
+      Break
     end;
 end;
 
