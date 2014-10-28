@@ -258,8 +258,8 @@ begin
   closesocket(ControlSocket);
 end;
 
-procedure StartControl;
-var 
+procedure StartControl(ControlWait: boolean = false);
+var
   ThreadID: Cardinal;
 begin
   Stopping := True; while (ExternalPort<>0) and (ExternalPort<>PortError) do Sleep(5);
@@ -267,7 +267,7 @@ begin
   Stopping := False;
   Sleep(50);
   CloseHandle(CreateThread(nil, 0, @ControlThreadProc, nil, 0, ThreadID));
-  while ExternalPort=0 do Sleep(5);
+  if ControlWait then while ExternalPort=0 do Sleep(5);
 end;
 
 procedure StopControl;
@@ -322,7 +322,7 @@ begin
         if Pos(':', MyRealHost)<>0 then
           GamePort := StrToIntDef(Copy(MyRealHost, Pos(':', MyRealHost)+1, 100), 17011);
 
-        StartControl;
+        StartControl(true);
         if ExternalPort=PortError then
           Exit;
 
@@ -375,6 +375,7 @@ var
   wsaData: TWSAData;
   ProcessHandle, Event: THandle;
 begin
+  Arr:=nil;
   for I:=1 to ParamCount-1 do
     if ParamStr(I)='/wnat2' then
     begin
@@ -383,29 +384,38 @@ begin
         continue;
 
       ExternalSocket := true;
+      GamePort := GetProfileInt('NetSettings', 'HostingPort', 17011);
 
-      if WSAStartup(MAKEWORD(2, 2), wsaData)=0 then
+      if WSAStartup(MAKEWORD(1, 1), wsaData)=0 then
       begin
-        ProcessHandle := OpenProcess(PROCESS_ALL_ACCESS, FALSE, StrToInt(Arr[0]));
-        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
-        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[2])), GetCurrentProcess(), @Event        , 0, FALSE, DUPLICATE_SAME_ACCESS);
-        CloseHandle(ProcessHandle);
-        Log('New socket: ' + IntToStr(ControlSocket));
-
-        if Event<>0 then
+        ProcessHandle := OpenProcess(PROCESS_DUP_HANDLE, FALSE, StrToInt(Arr[0]));
+        if ProcessHandle<>0 then
         begin
-          if  not SetEvent(Event) then
-            Log('SetEvent failed.');
-          CloseHandle(Event);
-        end;
+          DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
+          DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[2])), GetCurrentProcess(), @Event        , 0, FALSE, DUPLICATE_SAME_ACCESS);
+          CloseHandle(ProcessHandle);
+          Log('New socket: ' + IntToStr(ControlSocket));
 
-        if ControlSocket<>0 then
-          StartControl
+          if Event<>0 then
+          begin
+            if  not SetEvent(Event) then
+              Log('SetEvent failed: ' + IntToHex(GetLastError, 8));
+            CloseHandle(Event);
+          end;
+
+          if ControlSocket<>0 then
+            StartControl(false)
+            //No wait because this code part doesn't need it
+            //and the DLL is not yet ready to start threads
+         else
+            Log('Socket dupe failed: ' + IntToHex(GetLastError, 8));
+        end
         else
-          Log('Socket dupe failed.');
+          Log('OpenProcess failed: ' + IntToHex(GetLastError, 8));
       end
       else
         Log('WSAStartup failed.');
+      Break
     end;
 end;
 
