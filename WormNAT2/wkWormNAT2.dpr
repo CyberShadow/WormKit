@@ -258,7 +258,7 @@ begin
   closesocket(ControlSocket);
 end;
 
-procedure StartControl(ControlWait: boolean = false);
+procedure StartControl;
 var
   ThreadID: Cardinal;
 begin
@@ -267,7 +267,7 @@ begin
   Stopping := False;
   Sleep(50);
   CloseHandle(CreateThread(nil, 0, @ControlThreadProc, nil, 0, ThreadID));
-  if ControlWait then while ExternalPort=0 do Sleep(5);
+  while ExternalPort=0 do Sleep(5);
 end;
 
 procedure StopControl;
@@ -322,7 +322,7 @@ begin
         if Pos(':', MyRealHost)<>0 then
           GamePort := StrToIntDef(Copy(MyRealHost, Pos(':', MyRealHost)+1, 100), 17011);
 
-        StartControl(true);
+        StartControl;
         if ExternalPort=PortError then
           Exit;
 
@@ -368,12 +368,35 @@ end;
 
 // ***************************************************************
 
+procedure WormNAT2ExThreadProc(Event: THandle); stdcall;
+var
+  wsaData: TWSAData;
+begin
+  if not WSAStartup(MAKEWORD(2, 2), wsaData)=0 then
+  begin
+    Log('WSAStartup failed.');
+    Exit
+  end;
+
+  if ControlSocket<>0 then
+    StartControl
+  else
+    Log('Socket dupe failed: ' + IntToHex(GetLastError, 8));
+
+  if Event<>0 then
+  begin
+    if not SetEvent(Event) then
+      Log('SetEvent failed: ' + IntToHex(GetLastError, 8));
+    CloseHandle(Event);
+  end;
+end;
+
 procedure CheckCommandLine;
 var
   I: Integer;
   Arr: TStringDynArray;
-  wsaData: TWSAData;
   ProcessHandle, Event: THandle;
+  ThreadID: Cardinal;
 begin
   Arr:=nil;
   for I:=1 to ParamCount-1 do
@@ -386,36 +409,20 @@ begin
       ExternalSocket := true;
       GamePort := GetProfileInt('NetSettings', 'HostingPort', 17011);
 
-      if WSAStartup(MAKEWORD(2, 2), wsaData)=0 then
+      ProcessHandle := OpenProcess(PROCESS_DUP_HANDLE, FALSE, StrToInt(Arr[0]));
+      if ProcessHandle<>0 then
       begin
-        ProcessHandle := OpenProcess(PROCESS_DUP_HANDLE, FALSE, StrToInt(Arr[0]));
-        if ProcessHandle<>0 then
-        begin
-          DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
-          DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[2])), GetCurrentProcess(), @Event        , 0, FALSE, DUPLICATE_SAME_ACCESS);
-          CloseHandle(ProcessHandle);
-          Log('New socket: ' + IntToStr(ControlSocket));
+        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[1])), GetCurrentProcess(), @ControlSocket, 0, FALSE, DUPLICATE_SAME_ACCESS or DUPLICATE_CLOSE_SOURCE);
+        DuplicateHandle(ProcessHandle, THandle(StrToInt(Arr[2])), GetCurrentProcess(), @Event        , 0, FALSE, DUPLICATE_SAME_ACCESS);
+        CloseHandle(ProcessHandle);
+        Log('New socket: ' + IntToStr(ControlSocket));
 
-          if Event<>0 then
-          begin
-            if  not SetEvent(Event) then
-              Log('SetEvent failed: ' + IntToHex(GetLastError, 8));
-            CloseHandle(Event);
-          end;
-
-          if ControlSocket<>0 then
-            StartControl(false)
-            //No wait because this code part doesn't need it
-            //and the DLL is not yet ready to start threads
-         else
-            Log('Socket dupe failed: ' + IntToHex(GetLastError, 8));
-        end
-        else
-          Log('OpenProcess failed: ' + IntToHex(GetLastError, 8));
+        CloseHandle(CreateThread(nil, 0, @WormNAT2ExThreadProc, Pointer(Event), 0, ThreadID))
       end
       else
-        Log('WSAStartup failed.');
-      Break
+        Log('OpenProcess failed: ' + IntToHex(GetLastError, 8));
+
+      Exit;
     end;
 end;
 
