@@ -386,7 +386,7 @@ begin
       ExternalSocket := true;
       GamePort := GetProfileInt('NetSettings', 'HostingPort', 17011);
 
-      if WSAStartup(MAKEWORD(1, 1), wsaData)=0 then
+      if WSAStartup(MAKEWORD(2, 2), wsaData)=0 then
       begin
         ProcessHandle := OpenProcess(PROCESS_DUP_HANDLE, FALSE, StrToInt(Arr[0]));
         if ProcessHandle<>0 then
