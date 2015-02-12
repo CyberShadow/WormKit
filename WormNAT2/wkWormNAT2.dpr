@@ -2,6 +2,8 @@ library wkWormNAT2;
 
 {$IMAGEBASE $5a800000}
 
+{$RESOURCE wkWormNAT2.res}
+
 uses 
   Windows, WinSock, Types,
   USysUtils in '..\LiteUnits\USysUtils.pas',
