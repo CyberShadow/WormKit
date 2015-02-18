@@ -12,8 +12,13 @@ uses
   madCHook;
 
 const
+{$IFDEF USE_K3}
+  ProxyAddress = 'k3.1azy.net';
+  ControlPort = 9301;
+{$ELSE}
   ProxyAddress = 'proxy.worms2d.info';
   ControlPort = 17018;
+{$ENDIF}
   PortError = $FFFF;
   PortUnknown = 1; // WormNAT2Ex mode
 
