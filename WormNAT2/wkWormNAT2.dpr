@@ -15,6 +15,9 @@ const
 {$IFDEF USE_K3}
   ProxyAddress = 'k3.1azy.net';
   ControlPort = 9301;
+ {$IFDEF FORWARDPROXY}
+  ProxyPort = 9501;
+ {$ENDIF}
 {$ELSE}
   ProxyAddress = 'proxy.worms2d.info';
   ControlPort = 17018;
@@ -287,7 +290,7 @@ end;
 var
   connectNext : function (s: TSocket; name: PSockAddrIn; NameLen: Integer) : Integer;  stdcall;
   closesocketNext : function(s: TSocket): Integer; stdcall;
-  sendNext : function (s: TSocket; var Buf; len, flags: Integer): Integer; stdcall;
+  sendNext : function (s: TSocket; const Buf; len, flags: Integer): Integer; stdcall;
 
 // connection parameters
 var
@@ -295,11 +298,53 @@ var
   HttpRequest: String;
   MyRealHost, NewHost: String;
 
+{$IFDEF FORWARDPROXY}
+
+var
+  ProxyHost: PHostEnt;
+  ProxyAddr: TSockAddrIn;
+  QueuedSocket: TSocket;
+  QueuedAddress: TSockAddrIn;
+
+procedure HandleProxyConnection(s: TSocket; var name: PSockAddrIn);
+begin
+  Log('[FProxy] Rerouting connection on port '+IntToStr(htons(name.sin_port))+').');
+  if ProxyHost=nil then
+    ProxyHost := gethostbyname(PChar(ProxyAddress));
+  if ProxyHost<>nil then
+  begin
+    QueuedAddress := name^;
+    QueuedSocket := s;
+    name := @ProxyAddr;
+    name.sin_family := AF_INET;
+    name.sin_addr.s_addr := PInAddr(ProxyHost.h_addr_list^).s_addr;
+    name.sin_port := htons(ProxyPort);
+    Log('[FProxy] Proxy resolved OK, connecting');
+  end;
+end;
+
+procedure SendProxyAddress(s: TSocket);
+var
+  Port: Word;
+begin
+  Log('[FProxy] Sending destination address to proxy');
+  sendNext(s, QueuedAddress.sin_addr.s_addr, 4, 0);
+  Port := ntohs(QueuedAddress.sin_port);
+  sendNext(s, Port, 2, 0);
+  QueuedSocket := 0;
+end;
+
+{$ENDIF}
+
 function connectCallback(s: TSocket; name: PSockAddrIn; NameLen: Integer) : Integer; stdcall;
 begin
-  Result := connectNext(s, name, NameLen);
-  if ntohs(name.sin_port)=80 then
+  if (name.sin_family = AF_INET) and (ntohs(name.sin_port)=80) then
     CurrentHTTPConnection := s;
+{$IFDEF FORWARDPROXY}
+  if (name.sin_family = AF_INET) and (ntohs(name.sin_port) <> 80) and (ntohs(name.sin_port) <> 6667) then
+    HandleProxyConnection(s, name);
+{$ENDIF}
+  Result := connectNext(s, name, NameLen);
 end;
 
 function closesocketCallback(s: TSocket): Integer; stdcall;
@@ -354,6 +399,10 @@ function sendCallback(s: TSocket; var Buf; len, flags: Integer): Integer; stdcal
 var
   Data: string;
 begin
+{$IFDEF FORWARDPROXY}
+  if s = QueuedSocket then
+    SendProxyAddress(s);
+{$ENDIF}
   if s = CurrentHTTPConnection then
   begin
     SetLength(Data, len);
