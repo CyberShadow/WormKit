@@ -28,6 +28,11 @@ const
 var
   GamePort: Word;
 
+var
+  connectNext : function (s: TSocket; name: PSockAddrIn; NameLen: Integer) : Integer;  stdcall;
+  closesocketNext : function(s: TSocket): Integer; stdcall;
+  sendNext : function (s: TSocket; const Buf; len, flags: Integer): Integer; stdcall;
+
 // ***************************************************************
 
 procedure ConnectionThreadProc(ProxyPort: Integer); stdcall;
@@ -57,7 +62,7 @@ begin
 
   Log('[Proxy] Connecting to '+ProxyAddress+':'+IntToStr(ProxyPort));
   //DisableHooks;
-  if connect( ProxySocket, ProxyAddr, sizeof(ProxyAddr) )=SOCKET_ERROR then
+  if connectNext( ProxySocket, @ProxyAddr, sizeof(ProxyAddr) )=SOCKET_ERROR then
   begin
     Log('[Proxy] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
     //ReEnableHooks;
@@ -71,7 +76,7 @@ begin
   GameAddr.sin_port := htons( GamePort );
 
   Log('[Game] Connecting to localhost:'+IntToStr(GamePort));
-  if connect( GameSocket, GameAddr, sizeof(GameAddr) )=SOCKET_ERROR then
+  if connectNext( GameSocket, @GameAddr, sizeof(GameAddr) )=SOCKET_ERROR then
   begin
     Log('[Game] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
     //ReEnableHooks;
@@ -204,7 +209,7 @@ begin
     ControlAddr.sin_port := htons( ControlPort );
 
     //DisableHooks;
-    if connect( ControlSocket, ControlAddr, sizeof(ControlAddr) )=SOCKET_ERROR then
+    if connectNext( ControlSocket, @ControlAddr, sizeof(ControlAddr) )=SOCKET_ERROR then
     begin
       Log('[Control] Failed to connect (Error '+IntToStr(WSAGetLastError)+').');
       //ReEnableHooks;
@@ -286,11 +291,6 @@ begin
 end;
 
 // ***************************************************************
-
-var
-  connectNext : function (s: TSocket; name: PSockAddrIn; NameLen: Integer) : Integer;  stdcall;
-  closesocketNext : function(s: TSocket): Integer; stdcall;
-  sendNext : function (s: TSocket; const Buf; len, flags: Integer): Integer; stdcall;
 
 // connection parameters
 var
