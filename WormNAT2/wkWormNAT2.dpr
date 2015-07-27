@@ -297,6 +297,7 @@ var
   CurrentHTTPConnection: TSocket;
   HttpRequest: String;
   MyRealHost, NewHost: String;
+  SetHostingProxyAddressAndPort: procedure(hostingProxyAddressAndPort: PChar); stdcall = nil;
 
 {$IFDEF FORWARDPROXY}
 
@@ -381,6 +382,8 @@ begin
         NewHost := ProxyAddress + ':' + IntToStr(ExternalPort);
         Insert(NewHost, Data, P);
         Log('Game creation: '+MyRealHost+' substituted with '+NewHost);
+        if @SetHostingProxyAddressAndPort<>nil then
+          SetHostingProxyAddressAndPort(PChar(NewHost));
       end;
       // GET Http://wormnet1.team17.com:80/wormageddonweb/Game.asp?Cmd=Close&GameID=1196270&Name=-CyberShadow-MD&HostID=&GuestID=&GameType=0 HTTP/1.0
       if (Pos('/Game.asp?Cmd=Close&', Data)<>0) and (Pos('HostIP=', Data)<>0) then 
@@ -444,6 +447,19 @@ begin
     if not SetEvent(Event) then
       Log('SetEvent failed: ' + IntToHex(GetLastError, 8));
     CloseHandle(Event);
+  end;
+end;
+
+procedure GetWAExports;
+var
+  WAModuleHandle: THandle;
+begin
+  WAModuleHandle := GetModuleHandle(nil);
+  if WAModuleHandle<>0 then
+  begin
+    @SetHostingProxyAddressAndPort := GetProcAddress(WAModuleHandle, 'SetHostingProxyAddressAndPort');
+    if @SetHostingProxyAddressAndPort<>nil then
+      Log('Got SetHostingProxyAddressAndPort export');
   end;
 end;
 
@@ -547,5 +563,6 @@ begin
 
   Log('----------------------------------------');
 
+  GetWAExports;
   CheckCommandLine;
 end.
