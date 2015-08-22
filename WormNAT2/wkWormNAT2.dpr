@@ -4,6 +4,9 @@ library wkWormNAT2;
 
 {$RESOURCE wkWormNAT2.res}
 
+{$DEFINE USE_K3}
+{$DEFINE NOPOPUP}
+
 uses 
   Windows, WinSock, Types,
   USysUtils in '..\LiteUnits\USysUtils.pas',
