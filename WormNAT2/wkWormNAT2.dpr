@@ -16,7 +16,7 @@ uses
 
 const
 {$IFDEF USE_K3}
-  ProxyAddress = 'k3.1azy.net';
+  ProxyAddress = 'proxy.wormnet.net';
   ControlPort = 9301;
  {$IFDEF FORWARDPROXY}
   ProxyPort = 9501;
