@@ -13,3 +13,9 @@ the normal way. You can find a detailed guide on how to
 set up hosting here:
 
 http://worms2d.info/Hosting
+
+P.S. This module will only work if you're creating the
+game from W:A. It won't work with snooper programs, like
+ProSnooper! This is because WormNAT2 must intercept the
+game creation, which is done by the snooper program if
+you use it to host the game.
